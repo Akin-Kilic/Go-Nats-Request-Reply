@@ -1,0 +1,59 @@
+version: '3'
+
+services:
+
+  natsservice:
+    image: nats:2.6.6-alpine3.14
+    networks:
+      - alyafnnet
+    ports:
+      - "4222:4222"
+      - "6222:6222"
+      - "8222:8222"
+    volumes:
+      - ./volumes/nats:/data
+    restart: always
+    
+  helloworld:
+    build:
+      context: ./hello-endpointless
+      dockerfile: Dockerfile
+    networks:
+      - alyafnnet
+    environment:
+      - NATS_SERVER_URL=nats://natsservice:4222
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./hello-endpointless/.env.test:/app/.env.test
+    restart: always
+    
+  jwtservice_1:
+    build:
+      context: ./jwt-service
+      dockerfile: Dockerfile
+    networks:
+      - alyafnnet
+    environment:
+      - NATS_SERVER_URL=nats://natsservice:4222
+      - JWT_SECRET=secret
+    volumes:
+      - ./jwt-service/.env.test:/app/.env.test
+    restart: always
+  jwtservice_2:
+    build:
+      context: ./jwt-service
+      dockerfile: Dockerfile
+    networks:
+      - alyafnnet
+    environment:
+      - NATS_SERVER_URL=nats://natsservice:4222
+      - JWT_SECRET=secret
+    volumes:
+      - ./jwt-service/.env.test:/app/.env.test
+    restart: always
+
+networks:
+  alyafnnet:
+    name: alyafnnet
+    driver: bridge
